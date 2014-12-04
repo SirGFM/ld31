@@ -1,0 +1,4 @@
+[submodule "libs/GFraMe"]
+	path = libs/GFraMe
+	url = git@github.com:SirGFM/GFraMe.git
+	branch = master
