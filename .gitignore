@@ -31,3 +31,5 @@
 *promo/
 *.swp
 .fuse*
+*.wav
+*~
