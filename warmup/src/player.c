@@ -19,11 +19,17 @@ static GFraMe_sprite pl;
 static GFraMe_sprite **rainbow = NULL;
 static int r_len = 0;
 static int r_max = 0;
+static int r_speed = 100;
 
 static float cur_ang = 0.0f;
 static float next_ang = 0.0f;
 static int switch_time = 0;
 static int next_switch = 500;
+static int next_speed = 0;
+
+static int pl_speed;
+static int r_min;
+static int pl_elapsed;
 
 static GFraMe_sprite *pl_getRainbow();
 static void pl_initRainbow(GFraMe_sprite *spr, int color, int x, int y, float vx, float vy);
@@ -32,6 +38,8 @@ static int pl_doubleRainbow();
 int pl_init() {
 	int i;
 	int rv = 1;
+    
+    pl_elapsed = 0;
     
     GFraMe_sprite_init
         (
@@ -88,9 +96,18 @@ void pl_update(int ms) {
     float ang, vx, vy;
     GFraMe_sprite *spr;
     
+    pl_elapsed += ms;
+    if (pl_elapsed < 40000) {
+        r_min = 5 * (int)(pl_elapsed / 1000);
+    }
+    if (pl_elapsed < 20000) {
+        pl_speed = 75 + 10 * (int)(pl_elapsed / 1000);
+    }
+    
     if (switch_time > 0) {
         switch_time -= ms;
         cur_ang += next_ang * ((float)ms / 1000.0f);
+        r_speed += next_speed * ((float)ms / 1000.0f);
     }
     else {
         next_switch -= ms;
@@ -99,6 +116,10 @@ void pl_update(int ms) {
 //            GFraMe_new_log("time: %02.f\n", next_switch / 1000.0f);
             next_ang = (4*(GFraMe_util_randomi() % 90) - 180) * PI / 180.0f;
             next_ang -= cur_ang;
+            
+            next_speed = r_min + 10 * (1 + GFraMe_util_randomi() % 10);
+            next_speed -= r_speed;
+            
             switch_time += 500;
         }
     }
@@ -112,8 +133,8 @@ void pl_update(int ms) {
         float s = (float)sin(ang);
         
         if (i == 4) {
-            vx = -c*100;
-            vy = -s*100;
+            vx = -c*r_speed;
+            vy = -s*r_speed;
         }
         
         spr = pl_getRainbow();
@@ -123,8 +144,8 @@ void pl_update(int ms) {
             i,
             pl.obj.x + pl.obj.hitbox.cx,
             pl.obj.y + pl.obj.hitbox.cy,
-            c * 100,
-            s * 100
+            c * r_speed,
+            s * r_speed
             );
         
         ang += 2.0f * PI / 180.0f;
@@ -132,8 +153,8 @@ void pl_update(int ms) {
     }
     
     if (GFraMe_controller_max > 0) {
-        vx += GFraMe_controllers[0].lx * 150;
-        vy += GFraMe_controllers[0].ly * 150;
+        vx += GFraMe_controllers[0].lx * pl_speed;
+        vy += GFraMe_controllers[0].ly * pl_speed;
     }
     pl.obj.vx = vx;
     pl.obj.vy = vy;
