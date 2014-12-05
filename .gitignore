@@ -33,3 +33,4 @@
 .fuse*
 *.wav
 *~
+*timelapse/
