@@ -4,6 +4,7 @@
 #ifndef __GLOBAL_H_
 #define __GLOBAL_H_
 
+#include <GFraMe/GFraMe_audio.h>
 #include <GFraMe/GFraMe_error.h>
 #include <GFraMe/GFraMe_spriteset.h>
 
@@ -35,6 +36,7 @@
   } while (0)
 
 extern int gl_running;
+extern GFraMe_audio *gl_bgm;
 extern GFraMe_spriteset *gl_sset8x8;
 extern GFraMe_spriteset *gl_sset16x8;
 extern GFraMe_spriteset *gl_sset16x16;

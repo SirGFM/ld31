@@ -7,7 +7,8 @@ OBJS= \
      src/playstate.o
 
 ASSETS= \
-       assets/atlas.dat
+       assets/atlas.dat \
+       assets/song
 
 CFLAGS=-I./libs/GFraMe/include/ -m64
 ifneq ($(RELEASE), yes)
@@ -25,11 +26,14 @@ $(TARGET): $(LIB) $(OBJS) $(ASSETS)
 %.o: %.c
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-%.dat: %.bmp
+assets/atlas.dat: assets/atlas.bmp
+	rm -f $@
+
+assets/song: assets/song.wav
 	rm -f $@
 
 $(LIB):
-	make shared --directory=./libs/GFraMe/ USE_OPENGL=yes
+	make static --directory=./libs/GFraMe/
 
 .PHONY: clean mostlyclean
 

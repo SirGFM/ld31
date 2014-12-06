@@ -2,6 +2,7 @@
  * @file src/global.c
  */
 #include <GFraMe/GFraMe_assets.h>
+#include <GFraMe/GFraMe_audio.h>
 #include <GFraMe/GFraMe_error.h>
 #include <GFraMe/GFraMe_spriteset.h>
 #include <GFraMe/GFraMe_texture.h>
@@ -10,6 +11,9 @@
 #include <stdlib.h>
 
 #include "global.h"
+
+GFraMe_audio *gl_bgm;
+GFraMe_audio bgm;
 
 #define DEF_SPRSET(W, H) \
   GFraMe_spriteset *gl_sset##W##x##H; \
@@ -48,6 +52,17 @@ GFraMe_ret gl_init() {
         );
     ASSERT(rv == GFraMe_ret_ok);
     
+    gl_bgm = &bgm;
+    rv = GFraMe_audio_init
+        (
+        gl_bgm,
+        "song",
+        1,      // loop?
+        0,      // looppos
+        0       // stereo?
+        );
+    ASSERT(rv == GFraMe_ret_ok);
+    
   #define INIT_SPRSET(W, H) \
     gl_sset##W##x##H = &sset##W##x##H; \
     GFraMe_spriteset_init \
@@ -76,6 +91,7 @@ __ret:
 void gl_clean() {
     if (is_init) {
         GFraMe_texture_clear(&tex);
+        GFraMe_audio_clear(&bgm);
     }
     is_init = 0;
 }

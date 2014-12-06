@@ -2,6 +2,7 @@
  * @file src/main.c
  */
 #include <GFraMe/GFraMe.h>
+#include <GFraMe/GFraMe_audio_player.h>
 #include <GFraMe/GFraMe_controller.h>
 #include <GFraMe/GFraMe_screen.h>
 
@@ -33,17 +34,26 @@ int main(int argc, char *argv[]) {
         );
     ASSERT(rv == GFraMe_ret_ok);
     
+    rv = GFraMe_audio_player_init();
+    ASSERT(rv == GFraMe_ret_ok);
+    
     rv = gl_init();
     ASSERT(rv == GFraMe_ret_ok);
     
     GFraMe_set_bg_color(0x00, 0x00, 0x00, 0xff);
     
+#if !defined(DEBUG)
+    GFraMe_audio_player_play_bgm(gl_bgm, 0.75);
+#endif
     while (gl_running) {
         playstate();
     }
     
 __ret:
+    GFraMe_audio_player_pause();
+    
     gl_clean();
+    GFraMe_audio_player_clear();
     GFraMe_quit();
     return rv;
 }
