@@ -29,8 +29,10 @@
 *.hex
 
 *promo/
+*xcf/
 *.swp
 .fuse*
 *.wav
 *~
 *timelapse/
+notes
