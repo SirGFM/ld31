@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
     ext.atlas = TEX;
     ext.atlasWidth = TEXW;
     ext.atlasHeight = TEXH;
-    ext.flags = GFraMe_wndext_none;
+    ext.flags = GFraMe_wndext_scanline;
     
     rv = GFraMe_init
         (

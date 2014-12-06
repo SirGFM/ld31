@@ -16,9 +16,11 @@
   static GFraMe_spriteset sset##W##x##H
 
 int gl_running = 0;
-DEF_SPRSET(4, 4);
 DEF_SPRSET(8, 8);
+DEF_SPRSET(16, 8);
 DEF_SPRSET(16, 16);
+DEF_SPRSET(64, 16);
+DEF_SPRSET(64, 32);
 
 static int is_init = 0;
 static GFraMe_texture tex;
@@ -56,9 +58,11 @@ GFraMe_ret gl_init() {
         H \
         )
     
-    INIT_SPRSET(4, 4);
     INIT_SPRSET(8, 8);
+    INIT_SPRSET(16, 8);
     INIT_SPRSET(16, 16);
+    INIT_SPRSET(64, 16);
+    INIT_SPRSET(64, 32);
     
     gl_running = 1;
     is_init = 1;

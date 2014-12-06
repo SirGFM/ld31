@@ -2,8 +2,6 @@
 CC=gcc
 TARGET=game
 OBJS= \
-     src/arena.o \
-     src/chainball.o \
      src/global.o \
      src/main.o \
      src/playstate.o
@@ -31,7 +29,7 @@ $(TARGET): $(LIB) $(OBJS) $(ASSETS)
 	rm -f $@
 
 $(LIB):
-	make static --directory=./lib/GFraMe/
+	make shared --directory=./libs/GFraMe/ USE_OPENGL=yes
 
 .PHONY: clean mostlyclean
 
@@ -39,6 +37,6 @@ clean:
 	rm -f $(TARGET) $(OBJS)
 
 mostlyclean:
-	clean
-	make clean --directory=./lib/GFraMe
+	rm -f $(TARGET) $(OBJS)
+	make clean --directory=./libs/GFraMe/
 
