@@ -29,6 +29,9 @@
 #define SS8INI  80  // First valid (non char) tile on a 8x8 spriteset
 #define SS16INI 32  // First valid (non-char) tile on a 16x16 spriteset
 
+#define ABSI(val) \
+    ((val >= 0)?(val):(-(val)))
+
 #define ASSERT(stmt) \
   do { \
     if (!(stmt)) \
