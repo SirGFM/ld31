@@ -11,11 +11,17 @@
 
 #include "global.h"
 
+#define DEF_SPRSET(W, H) \
+  GFraMe_spriteset *gl_sset##W##x##H; \
+  static GFraMe_spriteset sset##W##x##H
+
 int gl_running = 0;
+DEF_SPRSET(4, 4);
+DEF_SPRSET(8, 8);
+DEF_SPRSET(16, 16);
 
 static int is_init = 0;
 static GFraMe_texture tex;
-//static GFraMe_spriteset sset;
 
 GFraMe_ret gl_init() {
     GFraMe_ret rv;
@@ -39,6 +45,20 @@ GFraMe_ret gl_init() {
         data
         );
     ASSERT(rv == GFraMe_ret_ok);
+    
+  #define INIT_SPRSET(W, H) \
+    gl_sset##W##x##H = &sset##W##x##H; \
+    GFraMe_spriteset_init \
+        ( \
+        gl_sset##W##x##H, \
+        &tex, \
+        W, \
+        H \
+        )
+    
+    INIT_SPRSET(4, 4);
+    INIT_SPRSET(8, 8);
+    INIT_SPRSET(16, 16);
     
     gl_running = 1;
     is_init = 1;

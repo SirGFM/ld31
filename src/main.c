@@ -36,6 +36,8 @@ int main(int argc, char *argv[]) {
     rv = gl_init();
     ASSERT(rv == GFraMe_ret_ok);
     
+    GFraMe_set_bg_color(0x00, 0x00, 0x00, 0xff);
+    
     while (gl_running) {
         playstate();
     }

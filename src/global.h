@@ -13,12 +13,21 @@
 #define WNDH    480
 #define TITLE   "Lame"
 #define TEX     "atlas"
-#define TEXW    128
+#define TEXW    256
 #define TEXH    128
 #define FPS     60
 #define UPS     60  // updates per second
 #define DPS     60  // draws per second
-#define LOGTOFILE   1
+#define LOGTOFILE   0
+
+#define ARW     20  // arena width
+#define ARH     15  // arena height
+#define ARL     ARW*ARH
+
+#define SS4INI  0  // First valid (non char) tile on a 8x8 spriteset
+#define TEXTINI 16
+#define SS8INI  80  // First valid (non char) tile on a 8x8 spriteset
+#define SS16INI 32  // First valid (non-char) tile on a 16x16 spriteset
 
 #define ASSERT(stmt) \
   do { \
@@ -27,6 +36,9 @@
   } while (0)
 
 extern int gl_running;
+extern GFraMe_spriteset *gl_sset4x4;
+extern GFraMe_spriteset *gl_sset8x8;
+extern GFraMe_spriteset *gl_sset16x16;
 
 GFraMe_ret gl_init();
 void gl_clean();

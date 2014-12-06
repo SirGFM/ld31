@@ -1,9 +1,15 @@
 
 CC=gcc
 TARGET=game
-OBJS=src/main.o \
+OBJS= \
+     src/arena.o \
+     src/chainball.o \
      src/global.o \
+     src/main.o \
      src/playstate.o
+
+ASSETS= \
+       assets/atlas.dat
 
 CFLAGS=-I./libs/GFraMe/include/ -m64
 ifneq ($(RELEASE), yes)
@@ -15,11 +21,14 @@ LIB=./libs/GFraMe/bin/Linux/libGFraMe.a
 all: $(TARGET)
 	date
 
-$(TARGET): $(LIB) $(OBJS)
+$(TARGET): $(LIB) $(OBJS) $(ASSETS)
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS) $(LDFLAGS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -o $@ -c $<
+
+%.dat: %.bmp
+	rm -f $@
 
 $(LIB):
 	make static --directory=./lib/GFraMe/

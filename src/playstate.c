@@ -8,13 +8,25 @@
 
 GFraMe_event_setup();
 
+#include "arena.h"
+#include "chainball.h"
 #include "global.h"
 #include "playstate.h"
+
+static int did_move;
 
 GFraMe_ret ps_init() {
     GFraMe_ret rv = GFraMe_ret_ok;
     
+    //rv = ar_init();
+    //ASSERT(rv == GFraMe_ret_ok);
+    rv = cb_init(32);
+    ASSERT(rv == GFraMe_ret_ok);
+    
+    did_move = 0;
+    
     GFraMe_event_init(UPS, DPS);
+__ret:
     return rv;
 }
 
@@ -23,7 +35,8 @@ void ps_event() {
     GFraMe_event_on_timer();
 //    GFraMe_event_on_mouse_up();
 //    GFraMe_event_on_mouse_down();
-//    GFraMe_event_on_mouse_moved();
+    GFraMe_event_on_mouse_moved();
+      did_move = 1;
 //    GFraMe_event_on_finger_down();
 //    GFraMe_event_on_finger_up();
     GFraMe_event_on_controller();
@@ -40,18 +53,22 @@ void ps_event() {
 
 void ps_update() {
   GFraMe_event_update_begin();
-    
+    //ar_update(GFraMe_event_elapsed);
+    cb_update(GFraMe_event_elapsed, did_move);
   GFraMe_event_update_end();
+  did_move = 0;
 }
 
 void ps_draw() {
   GFraMe_event_draw_begin();
-    
+    //ar_draw();
+    cb_draw();
   GFraMe_event_draw_end();
 }
 
 void ps_clean() {
-    
+    // ar_clean();
+    cb_clean();
 }
 
 void playstate() {
