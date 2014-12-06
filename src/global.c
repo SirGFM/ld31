@@ -20,6 +20,7 @@ GFraMe_audio bgm;
   static GFraMe_spriteset sset##W##x##H
 
 int gl_running = 0;
+DEF_SPRSET(4, 4);
 DEF_SPRSET(8, 8);
 DEF_SPRSET(16, 8);
 DEF_SPRSET(16, 16);
@@ -73,6 +74,7 @@ GFraMe_ret gl_init() {
         H \
         )
     
+    INIT_SPRSET(4, 4);
     INIT_SPRSET(8, 8);
     INIT_SPRSET(16, 8);
     INIT_SPRSET(16, 16);

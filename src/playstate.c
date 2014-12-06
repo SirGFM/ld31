@@ -7,11 +7,15 @@
 #include <GFraMe/GFraMe_keys.h>
 #include <GFraMe/GFraMe_sprite.h>
 #include <GFraMe/GFraMe_spriteset.h>
+#include <GFraMe/GFraMe_util.h>
 
 GFraMe_event_setup();
 
 #include "global.h"
+#include "particles.h"
 #include "playstate.h"
+
+static int is_song_playing = 1;
 
 enum {
     bg_autumn,
@@ -23,23 +27,25 @@ enum {
     fl_spring,
     fl_summer,
     snowman,
+    particles,
     SPR_MAX
 };
 
-//GFraMe_sprite sprs[SPR_MAX];
 static int pos;
 static float fpos;
+static int new_snow;
+static int new_leaf;
 
 GFraMe_ret ps_init() {
     int i;
     GFraMe_ret rv = GFraMe_ret_ok;
     
-//    i = 0;
-//    while (i < SPR_MAX)
-//        GFraMe_sprite(init(
+    rv = p_init();
     
     pos = 0;
     fpos = 0;
+    new_snow = 0;
+    new_leaf = 0;
     
     GFraMe_event_init(UPS, DPS);
 __ret:
@@ -55,11 +61,33 @@ void ps_event() {
 //    GFraMe_event_on_finger_down();
 //    GFraMe_event_on_finger_up();
     GFraMe_event_on_controller();
-      if (GFraMe_controller_max > 0 && GFraMe_controllers[0].home)
-        gl_running = 0;
+      if (GFraMe_controller_max > 0) {
+        if (GFraMe_controllers[0].home)
+          gl_running = 0;
+        else if (GFraMe_controllers[0].select) {
+          if (is_song_playing) {
+            GFraMe_audio_player_pause();
+            is_song_playing = 0;
+          }
+          else {
+            GFraMe_audio_player_play();
+            is_song_playing = 1;
+          }
+        }
+      }
     GFraMe_event_on_key_down();
       if (GFraMe_keys.esc)
         gl_running = 0;
+      else if (GFraMe_keys.m || GFraMe_keys.zero || GFraMe_keys.n0) {
+        if (is_song_playing) {
+          GFraMe_audio_player_pause();
+          is_song_playing = 0;
+        }
+        else {
+          GFraMe_audio_player_play();
+          is_song_playing = 1;
+        }
+      }
     GFraMe_event_on_key_up();
     GFraMe_event_on_quit();
       gl_running = 0;
@@ -71,7 +99,38 @@ void ps_update() {
     fpos += SCRW/10 * GFraMe_event_elapsed / 1000.0f;
     if (fpos > SCRW)
         fpos -= SCRW;
+    else if (fpos < 0)
+        fpos += SCRW;
     pos = (int)fpos;
+    
+    // TODO spawn particles
+    new_snow -= GFraMe_event_elapsed;
+    if (new_snow <= 0) {
+        new_snow += 50 + 5 * (1 + GFraMe_util_randomi() % 20);
+        p_spawn
+            (
+            /*y*/23,
+            /*offx*/8 + (GFraMe_util_randomi() % 38),
+            /*vx*/0,
+            /*tile*/0,
+            /*speed*/0
+            );
+    }
+    new_leaf -= GFraMe_event_elapsed;
+    if (new_leaf <= 0) {
+        int tile = 1 + GFraMe_util_randomi()%2;
+        new_leaf += 70 + 30 * (1 + GFraMe_util_randomi() % 20);
+        p_spawn
+            (
+            /*y*/23,
+            /*offx*/128 + (GFraMe_util_randomi() % 28),
+            /*vx*/0,
+            /*tile*/tile,
+            /*speed*/1
+            );
+    }
+    
+    p_update(GFraMe_event_elapsed);
   GFraMe_event_update_end();
 }
 
@@ -84,19 +143,6 @@ void ps_render(GFraMe_spriteset *ss, int tile, int offx, int y, int w) {
 void ps_draw() {
   GFraMe_event_draw_begin();
     int i;
-    
-    #define ps_draw_bg(tile, offx) \
-      do { \
-        GFraMe_spriteset_draw(gl_sset64x32, tile, pos + offx, 24, 0); \
-        if (pos + offx + 40 - SCRW > 0) \
-          GFraMe_spriteset_draw(gl_sset64x32, tile, pos + offx - SCRW, 24, 0); \
-      } while (0)
-    #define ps_draw_fl(tile, offx) \
-      do { \
-        GFraMe_spriteset_draw(gl_sset64x16, tile, pos + offx, 40, 0); \
-        if (pos + offx + 46 - SCRW > 0) \
-          GFraMe_spriteset_draw(gl_sset64x16, tile, pos + offx - SCRW, 40, 0); \
-      } while (0)
     
     i = 0;
     while (i < SPR_MAX) {
@@ -131,6 +177,9 @@ void ps_draw() {
         case snowman:
             ps_render(gl_sset16x16, 32, 20/*pos*/, 32, 16);
         break;
+        case particles:
+            p_draw(pos);
+        break;
         default: {}
       }
       i++;
@@ -146,6 +195,7 @@ void ps_draw() {
 }
 
 void ps_clean() {
+    p_clear();
 }
 
 void playstate() {
