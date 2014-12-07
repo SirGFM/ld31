@@ -17,6 +17,7 @@ GFraMe_event_setup();
 #include "particles.h"
 #include "playstate.h"
 #include "text.h"
+#include "upper_text.h"
 
 static int is_song_playing = 1;
 
@@ -114,12 +115,19 @@ GFraMe_ret ps_init() {
     kid_time = 250;
     
     txt_init();
+    utxt_init();
+    
+#if !defined(GFRAME_MOBILE)
+    utxt_set_text("  COLD REMEMBRANCE   -- PRESS ANY KEY --");
+#else
+    utxt_set_text("  COLD REMEMBRANCE  -- TOUCH TO START --");
+#endif
     
     pos = 0;
     fpos = 0;
     new_snow = 0;
     new_leaf = 0;
-    state = 0;
+    state = -1;
     enable_movement = 0;
     facing_left = 0;
     do_change_state = 1;
@@ -155,6 +163,10 @@ void ps_event() {
     GFraMe_event_on_key_down();
       if (GFraMe_keys.esc)
         gl_running = 0;
+      else if (state == -1 && utxt_is_complete()) {
+        state = 0;
+        utxt_set_text("                                        ");
+      }
       else if (GFraMe_keys.m || GFraMe_keys.zero || GFraMe_keys.n0) {
         if (is_song_playing) {
           GFraMe_audio_player_pause();
@@ -328,6 +340,7 @@ void ps_draw() {
     }
     
     txt_draw();
+    utxt_draw();
   GFraMe_event_draw_end();
 }
 
@@ -435,9 +448,13 @@ static void ps_do_anim() {
 }
 
 static void ps_do_tip() {
+    utxt_upd(GFraMe_event_elapsed);
 }
 
 static void ps_do_text() {
+    if (state == -1)
+        return;
+    
     txt_upd(GFraMe_event_elapsed);
     
     if (txt_is_complete())

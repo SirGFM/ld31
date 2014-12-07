@@ -6,7 +6,8 @@ OBJS= \
      src/main.o \
      src/particles.o \
      src/playstate.o \
-     src/text.o
+     src/text.o \
+     src/upper_text.o
 
 ASSETS= \
        assets/atlas.dat \
