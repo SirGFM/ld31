@@ -5,6 +5,7 @@
 #include <GFraMe/GFraMe_controller.h>
 #include <GFraMe/GFraMe_error.h>
 #include <GFraMe/GFraMe_event.h>
+#include <GFraMe/GFraMe_log.h>
 #include <GFraMe/GFraMe_keys.h>
 #include <GFraMe/GFraMe_sprite.h>
 #include <GFraMe/GFraMe_spriteset.h>
@@ -40,6 +41,7 @@ static int new_snow;
 static int new_leaf;
 static int state;
 static int facing_left;
+static int do_change_state;
 
 static int rise[6] = {37,36,35,34,33,32};
 static int down[6] = {32,33,34,35,36,37};
@@ -113,6 +115,7 @@ GFraMe_ret ps_init() {
     state = 0;
     enable_movement = 0;
     facing_left = 0;
+    do_change_state = 1;
     
     GFraMe_event_init(UPS, DPS);
 __ret:
@@ -286,6 +289,8 @@ __ret:
 }
 
 static void ps_move_world() {
+    int last;
+    
     if (speed != 0)
         fpos += speed * GFraMe_event_elapsed / 1000.0f;
     if (fpos > SCRW)
@@ -294,13 +299,17 @@ static void ps_move_world() {
         fpos += SCRW;
     pos = (int)fpos;
     
+    last = sm_pos;
     if (sm_speed != 0)
         sm_fpos += sm_speed * GFraMe_event_elapsed / 1000.0f;
     if (sm_fpos > SCRW)
         sm_fpos -= SCRW;
-    else if (sm_fpos < 0)
+    else if (sm_fpos < 0) {
         sm_fpos += SCRW;
+        do_change_state |= 1;
+    }
     sm_pos = (int)sm_fpos;
+    
 }
 
 static void ps_do_particles() {
@@ -343,7 +352,6 @@ static void ps_do_anim() {
         else if (rv == GFraMe_ret_anim_finished) {
             if (state == 4) {
                 enable_movement = 1;
-                state++;
             }
             if (sm_speed != 0 && sm_cur == &sm_jump) {
                 sm_cur = &sm_fall;
@@ -369,18 +377,24 @@ static void ps_do_tip() {
 static void ps_do_text() {
     txt_upd(GFraMe_event_elapsed);
     
-    if (txt_is_complete()) {
+    if (txt_is_complete())
+      do_change_state |= 2;
+    if (do_change_state == 3) {
+      do_change_state = 0;
       switch (state) {
         case 0:
             txt_set_text("IN THE END...");
+            do_change_state = 1;
             state++;
             break;
         case 1:
             txt_set_text("I COULDN'T MEET HIM AGAIN...");
+            do_change_state = 1;
             state++;
             break;
         case 2:
             txt_set_text("IT'S BEEN SO LONG...");
+            do_change_state = 1;
             state++;
             break;
         case 3:
@@ -388,31 +402,33 @@ static void ps_do_text() {
             sm_cur = &sm_rise;
             state++;
             break;
-        case 5:
+        case 4:
             txt_set_text("DID MY BEST TO KEEP FROM MELTING");
             state++;
             break;
-        case 6:
+        case 5:
             txt_set_text("THOSE MANY WINTER   WERE HARSH, AT TIMES");
             state++;
             break;
-        case 7:
+        case 6:
             txt_set_text("ANY MISSTEP AND I   WOULD BE NO MORE");
             state++;
             break;
-        case 8:
+        case 7:
             txt_set_text("BUT EVEN HERE,      WHENCE I CAME FROM");
             state++;
             break;
-        case 9:
+        case 8:
             txt_set_text("I FOUND NOTHING...");
             state++;
             break;
-        case 10:
+        case 9:
             txt_set_text("AND COULDN'T HANDLE ANYMORE");
+            sm_cur = &sm_down;
+            do_change_state = 1;
             state++;
             break;
-        case 11:
+        case 10:
             txt_set_text("        THE                  END        ");
             break;
         default: {}
@@ -423,6 +439,11 @@ static void ps_do_text() {
 
 static void ps_do_sm() {
     sm_speed = 0;
+    if (state >= 10) {
+        speed = 0;
+        return;
+    }
+    
     if (GFraMe_keys.a
         || GFraMe_keys.left
         || GFraMe_keys.h
