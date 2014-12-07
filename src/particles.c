@@ -65,7 +65,7 @@ void p_spawn(float y, float offx, int vx, int tile, int speed) {
     p->offx = offx;
     p->vx = vx;
     p->tile = tile;
-    if (speed > 0 && speed < 3)
+    if (speed >= -1 && speed < 3)
         p->speed = speed;
     else
         p->speed = 0;
@@ -82,7 +82,9 @@ void p_update(int ms) {
         particle *p;
         
         p = p_arr[i++];
-        if (p->speed == 0)
+        if (p->speed == -1)
+            vy = 20.0f + (int)(GFraMe_util_randomi() % 40);
+        else if (p->speed == 0)
             vy = 10.0f + (int)(GFraMe_util_randomi() % 30);
         else if (p->speed == 1)
             vy = 5.0f + (int)(GFraMe_util_randomi() % 15);

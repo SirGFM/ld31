@@ -46,6 +46,7 @@ static int state;
 static int facing_left;
 static int do_change_state;
 static int wait_for_input;
+static int snow_harsher;
 
 static int rise[6] = {37,36,35,34,33,32};
 static int down[6] = {32,33,34,35,36,37};
@@ -134,6 +135,7 @@ GFraMe_ret ps_init() {
     facing_left = 0;
     do_change_state = 1;
     wait_for_input = 0;
+    snow_harsher = 0;
     
     GFraMe_event_init(UPS, DPS);
 __ret:
@@ -405,14 +407,22 @@ static void ps_do_particles() {
     // TODO spawn particles
     new_snow -= GFraMe_event_elapsed;
     if (new_snow <= 0) {
-        new_snow += 50 + 5 * (1 + GFraMe_util_randomi() % 20);
+        int vx = 0;
+        int speed = 0;
+        if (snow_harsher) {
+            new_snow += 20 + 5 * (1 + GFraMe_util_randomi() % 10);
+            vx = 5;
+            speed = -1;
+        }
+        else
+            new_snow += 50 + 5 * (1 + GFraMe_util_randomi() % 20);
         p_spawn
             (
             /*y*/23,
             /*offx*/8 + (GFraMe_util_randomi() % 38),
-            /*vx*/0,
+            /*vx*/vx,
             /*tile*/0,
-            /*speed*/0
+            /*speed*/speed
             );
     }
     new_leaf -= GFraMe_event_elapsed;
@@ -473,7 +483,10 @@ static void ps_do_anim() {
 static void ps_do_tip() {
     utxt_upd(GFraMe_event_elapsed);
     if (utxt_is_complete()) {
-        if (wait_for_input) {
+        if (state == 5 && enable_movement) {
+            utxt_set_text("                                        ");
+        }
+        else if (state == 4 && wait_for_input) {
         #if !defined(GFRAME_MOBILE)
             utxt_set_text("PRESS 'LEFT' TO     MOVE BACK");
         #else
@@ -520,6 +533,7 @@ static void ps_do_text() {
             break;
         case 5:
             txt_set_text("THOSE MANY WINTERS  WERE HARSH, AT TIMES");
+            snow_harsher = 1;
             state++;
             break;
         case 6:
@@ -537,7 +551,11 @@ static void ps_do_text() {
         case 9:
             txt_set_text("AND COULDN'T HANDLE ANYMORE");
             //sm_cur = &sm_down;
+            snow_harsher = 0;
             state++;
+            break;
+        case 10:
+            txt_set_text("                                        ");
             break;
         case 14:
             txt_set_text("        THE                  END        ");
