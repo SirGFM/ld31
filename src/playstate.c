@@ -30,6 +30,7 @@ enum {
     fl_spring,
     fl_summer,
     snowman,
+    kid,
     particles,
     SPR_MAX
 };
@@ -60,6 +61,9 @@ static int sm_invert;
 static int sm_speed;
 static int sm_pos;
 static float sm_fpos;
+
+static float kid_pos;
+static int kid_time;
 
 GFraMe_ret ps_init() {
     int i;
@@ -105,6 +109,9 @@ GFraMe_ret ps_init() {
     sm_invert = 0;
     sm_pos = 0;
     sm_fpos = 0;
+    
+    kid_pos = 0;
+    kid_time = 250;
     
     txt_init();
     
@@ -191,6 +198,46 @@ void ps_update() {
       ps_do_text();
       if (enable_movement)
         ps_do_sm();
+      if (state == 10) {
+         if (kid_pos < 22)
+            kid_pos += 10 * GFraMe_event_elapsed / 1000.0f;
+         else {
+            state++;
+            kid_time = 250;
+         }
+      }
+      else if (state == 11) {
+            if (kid_time > 0)
+                kid_time -= GFraMe_event_elapsed;
+            else {
+                sm_frame++;
+                if (sm_frame == 38)
+                    state = 13;
+                else
+                    state++;
+                kid_time = 250;
+            }
+      }
+      else if (state == 12) {
+            if (kid_time > 0)
+                kid_time -= GFraMe_event_elapsed;
+            else {
+                sm_frame++;
+                if (sm_frame == 38)
+                    state = 13;
+                else
+                    state--;
+                kid_time = 250;
+           }
+      }
+      else if (state == 13) {
+         if (kid_pos > -18)
+            kid_pos -= 10 * GFraMe_event_elapsed / 1000.0f;
+         else {
+            do_change_state |= 1;
+            state++;
+         }
+      }
     } while (skip-- > 0);
   GFraMe_event_update_end();
 }
@@ -229,7 +276,7 @@ void ps_draw() {
         break;
         case fl_summer:
             ps_render(gl_sset64x16, 14, 80, 40, 46);
-            ps_render(gl_sset16x8, 32, 112, 37, 16);
+            ps_render(gl_sset16x8, 1, 112, 37, 16);
         break;
         case fl_autumn:
             ps_render(gl_sset64x16, 15, -40, 40, 46);
@@ -249,6 +296,22 @@ void ps_draw() {
             pos = tmp;
         }
         break;
+        case kid:
+            if (state == 10) {
+                ps_render(gl_sset16x16, 41, kid_pos/*pos*/, 32/*y*/, 16/*w*/);
+            }
+            else if (state == 11) {
+                ps_render(gl_sset16x16, 39, kid_pos/*pos*/, 32/*y*/, 16/*w*/);
+            }
+            else if (state == 12) {
+                ps_render(gl_sset16x16, 40, kid_pos/*pos*/, 32/*y*/, 16/*w*/);
+            }
+            else if (state == 13) {
+                facing_left = 1;
+                ps_render(gl_sset16x16, 41, kid_pos/*pos*/, 32/*y*/, 16/*w*/);
+                facing_left = 0;
+            }
+        break;
         case particles:
             p_draw(pos);
         break;
@@ -259,8 +322,8 @@ void ps_draw() {
     
     i = 0;
     while (i < SCRW/8) {
-        GFraMe_spriteset_draw(gl_sset8x8, 66, i*8, 16, 0);
-        GFraMe_spriteset_draw(gl_sset8x8, 67, i*8, 56, 0);
+        GFraMe_spriteset_draw(gl_sset8x8, 4, i*8, 16, 0);
+        GFraMe_spriteset_draw(gl_sset8x8, 5, i*8, 56, 0);
         i++;
     }
     
@@ -424,11 +487,10 @@ static void ps_do_text() {
             break;
         case 9:
             txt_set_text("AND COULDN'T HANDLE ANYMORE");
-            sm_cur = &sm_down;
-            do_change_state = 1;
+            //sm_cur = &sm_down;
             state++;
             break;
-        case 10:
+        case 14:
             txt_set_text("        THE                  END        ");
             break;
         default: {}
