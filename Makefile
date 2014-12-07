@@ -2,6 +2,7 @@
 CC=gcc
 TARGET=game
 OBJS= \
+     src/clouds.o \
      src/global.o \
      src/main.o \
      src/particles.o \

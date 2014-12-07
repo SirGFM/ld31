@@ -14,6 +14,7 @@
 
 GFraMe_event_setup();
 
+#include "clouds.h"
 #include "global.h"
 #include "particles.h"
 #include "playstate.h"
@@ -34,6 +35,7 @@ enum {
     snowman,
     kid,
     particles,
+    clouds,
     SPR_MAX
 };
 
@@ -74,6 +76,9 @@ GFraMe_ret ps_init() {
     GFraMe_ret rv = GFraMe_ret_ok;
     
     rv = p_init();
+    ASSERT(rv == GFraMe_ret_ok);
+    rv = c_init(128);
+    ASSERT(rv == GFraMe_ret_ok);
     
     GFraMe_animation_init
         (
@@ -303,7 +308,7 @@ void ps_draw() {
         break;
         case fl_summer:
             ps_render(gl_sset64x16, 14, 80, 40, 46);
-            ps_render(gl_sset16x8, 1, 112, 37, 16);
+            //ps_render(gl_sset16x8, 1, 112, 37, 16);
         break;
         case fl_autumn:
             ps_render(gl_sset64x16, 15, -40, 40, 46);
@@ -312,6 +317,7 @@ void ps_draw() {
         case snowman: {
             int tmp;
             
+            //GFraMe_new_log("%i", sm_pos - pos);
             tmp = pos;
             pos = sm_pos;
             
@@ -342,6 +348,9 @@ void ps_draw() {
         case particles:
             p_draw(pos);
         break;
+        case clouds:
+            c_draw(pos);
+        break;
         default: {}
       }
       i++;
@@ -361,6 +370,7 @@ void ps_draw() {
 
 void ps_clean() {
     p_clear();
+    c_clear();
 }
 
 void playstate() {
@@ -439,6 +449,7 @@ static void ps_do_particles() {
             );
     }
     p_update(GFraMe_event_elapsed);
+    c_update(GFraMe_event_elapsed);
 }
 
 static void ps_do_anim() {
@@ -504,9 +515,13 @@ static void ps_do_text() {
     
     if (txt_is_complete())
       do_change_state |= 2;
-    if (do_change_state == 3) {
+    if (do_change_state == 3 || state == -2) {
       do_change_state = 0;
       switch (state) {
+        case -2:
+            txt_set_text("BUT THE SEASONS     CONTINUED TO CHANGE");
+            state = -3;
+            break;
         case 0:
             txt_set_text("IN THE END...");
             do_change_state = 1;
@@ -567,7 +582,20 @@ static void ps_do_text() {
 }
 
 static void ps_do_sm() {
+    int dif;
+    
     sm_speed = 0;
+    if (state <= -2) {
+        return;
+    }
+    
+    dif = sm_pos - pos;
+    if (dif < -30 || dif > 28) {
+        state = -2;
+        sm_cur = &sm_down;
+        return;
+    }
+    
     if (state >= 10) {
         speed = 0;
         return;

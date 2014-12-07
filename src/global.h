@@ -12,7 +12,7 @@
 #define SCRH    80
 #define WNDW    480
 #define WNDH    240
-#define TITLE   "Snowman"
+#define TITLE   "ColdRemembrance"
 #define TEX     "atlas"
 #define TEXW    256
 #define TEXH    128
@@ -42,6 +42,7 @@ extern GFraMe_audio *gl_melt;
 extern GFraMe_audio *gl_build;
 extern GFraMe_audio *gl_smwalk;
 extern GFraMe_spriteset *gl_sset4x4;
+extern GFraMe_spriteset *gl_sset8x4;
 extern GFraMe_spriteset *gl_sset8x8;
 extern GFraMe_spriteset *gl_sset16x8;
 extern GFraMe_spriteset *gl_sset16x16;
