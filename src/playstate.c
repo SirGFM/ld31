@@ -298,17 +298,17 @@ void ps_draw() {
         break;
         case kid:
             if (state == 10) {
-                ps_render(gl_sset16x16, 41, kid_pos/*pos*/, 32/*y*/, 16/*w*/);
+                ps_render(gl_sset16x16, 41, kid_pos/*pos*/, 32/*y*/, 2*SCRW+16/*w*/);
             }
             else if (state == 11) {
-                ps_render(gl_sset16x16, 39, kid_pos/*pos*/, 32/*y*/, 16/*w*/);
+                ps_render(gl_sset16x16, 39, kid_pos/*pos*/, 32/*y*/, 2*SCRW+16/*w*/);
             }
             else if (state == 12) {
-                ps_render(gl_sset16x16, 40, kid_pos/*pos*/, 32/*y*/, 16/*w*/);
+                ps_render(gl_sset16x16, 40, kid_pos/*pos*/, 32/*y*/, 2*SCRW+16/*w*/);
             }
             else if (state == 13) {
                 facing_left = 1;
-                ps_render(gl_sset16x16, 41, kid_pos/*pos*/, 32/*y*/, 16/*w*/);
+                ps_render(gl_sset16x16, 41, kid_pos/*pos*/, 32/*y*/, 2*SCRW+16/*w*/);
                 facing_left = 0;
             }
         break;
@@ -470,7 +470,7 @@ static void ps_do_text() {
             state++;
             break;
         case 5:
-            txt_set_text("THOSE MANY WINTER   WERE HARSH, AT TIMES");
+            txt_set_text("THOSE MANY WINTERS  WERE HARSH, AT TIMES");
             state++;
             break;
         case 6:
