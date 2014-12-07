@@ -37,6 +37,10 @@
 
 extern int gl_running;
 extern GFraMe_audio *gl_bgm;
+extern GFraMe_audio *gl_typing;
+extern GFraMe_audio *gl_melt;
+extern GFraMe_audio *gl_build;
+extern GFraMe_audio *gl_smwalk;
 extern GFraMe_spriteset *gl_sset4x4;
 extern GFraMe_spriteset *gl_sset8x8;
 extern GFraMe_spriteset *gl_sset16x8;

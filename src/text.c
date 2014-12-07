@@ -1,6 +1,7 @@
 /**
  * @file src/text.c
  */
+#include <GFraMe/GFraMe_audio_player.h>
 #include <GFraMe/GFraMe_tilemap.h>
 
 #include <string.h>
@@ -41,10 +42,17 @@ void txt_upd(int ms) {
     if (time > 0)
         time -= ms;
     else if (pos < 40) {
-        txt_arr[pos] = txt_bb[pos];
+        char tile;
+        
+        tile = txt_bb[pos];
+        txt_arr[pos] = tile;
         pos++;
         
-        // TODO RNG and SFX
+    #if !defined(DEBUG)
+        if (tile != ' '-'!' && tile > 0) {//GFraMe_util_randomi() % 100 < 33) {
+            GFraMe_audio_player_push(gl_typing, 0.15);
+        }
+    #endif
         
         if (pos == 40) {
             is_complete = 1;

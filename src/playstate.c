@@ -2,6 +2,7 @@
  * @file src/playstate.c
  */
 #include <GFraMe/GFraMe_animation.h>
+#include <GFraMe/GFraMe_audio_player.h>
 #include <GFraMe/GFraMe_controller.h>
 #include <GFraMe/GFraMe_error.h>
 #include <GFraMe/GFraMe_event.h>
@@ -44,6 +45,7 @@ static int new_leaf;
 static int state;
 static int facing_left;
 static int do_change_state;
+static int wait_for_input;
 
 static int rise[6] = {37,36,35,34,33,32};
 static int down[6] = {32,33,34,35,36,37};
@@ -131,6 +133,7 @@ GFraMe_ret ps_init() {
     enable_movement = 0;
     facing_left = 0;
     do_change_state = 1;
+    wait_for_input = 0;
     
     GFraMe_event_init(UPS, DPS);
 __ret:
@@ -161,6 +164,10 @@ void ps_event() {
         }
       }
     GFraMe_event_on_key_down();
+      // Make the game wait for the first input after 'reviving' the snowman
+      if (wait_for_input)
+        enable_movement = 1;
+      
       if (GFraMe_keys.esc)
         gl_running = 0;
       else if (state == -1 && utxt_is_complete()) {
@@ -222,6 +229,9 @@ void ps_update() {
             if (kid_time > 0)
                 kid_time -= GFraMe_event_elapsed;
             else {
+            #if !defined(DEBUG)
+                GFraMe_audio_player_push(gl_melt, 0.3);
+            #endif
                 sm_frame++;
                 if (sm_frame == 38)
                     state = 13;
@@ -234,6 +244,9 @@ void ps_update() {
             if (kid_time > 0)
                 kid_time -= GFraMe_event_elapsed;
             else {
+            #if !defined(DEBUG)
+                GFraMe_audio_player_push(gl_melt, 0.3);
+            #endif
                 sm_frame++;
                 if (sm_frame == 38)
                     state = 13;
@@ -423,11 +436,17 @@ static void ps_do_anim() {
         GFraMe_ret rv;
         rv = GFraMe_animation_update(sm_cur, GFraMe_event_elapsed);
         
-        if (rv == GFraMe_ret_anim_new_frame && sm_cur->index < sm_cur->num_frames)
+        if (rv == GFraMe_ret_anim_new_frame && sm_cur->index < sm_cur->num_frames) {
             sm_frame = sm_cur->frames[sm_cur->index];
+            if (sm_cur == &sm_rise) {
+            #if !defined(DEBUG)
+                GFraMe_audio_player_push(gl_build, 0.3);
+            #endif
+            }
+        }
         else if (rv == GFraMe_ret_anim_finished) {
             if (state == 4) {
-                enable_movement = 1;
+                wait_for_input = 1;
             }
             if (sm_speed != 0 && sm_cur == &sm_jump) {
                 sm_cur = &sm_fall;
@@ -444,11 +463,24 @@ static void ps_do_anim() {
     else if (sm_speed != 0) {
         sm_cur = &sm_jump;
         sm_frame = sm_cur->frames[0];
+    #if !defined(DEBUG)
+        double delta = (GFraMe_util_randomi() % 11) * 0.0025;
+        GFraMe_audio_player_push(gl_smwalk, 0.3 - delta);
+    #endif
     }
 }
 
 static void ps_do_tip() {
     utxt_upd(GFraMe_event_elapsed);
+    if (utxt_is_complete()) {
+        if (wait_for_input) {
+        #if !defined(GFRAME_MOBILE)
+            utxt_set_text("PRESS 'LEFT' TO     MOVE BACK");
+        #else
+            utxt_set_text("TOUCH TOWARD THE    LEFT TO MOVE BACK");
+        #endif
+        }
+    }
 }
 
 static void ps_do_text() {
