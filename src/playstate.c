@@ -39,6 +39,7 @@ static float fpos;
 static int new_snow;
 static int new_leaf;
 static int state;
+static int facing_left;
 
 static int rise[6] = {37,36,35,34,33,32};
 static int down[6] = {32,33,34,35,36,37};
@@ -51,7 +52,12 @@ static GFraMe_animation sm_jump;
 static GFraMe_animation sm_fall;
 static GFraMe_animation *sm_cur;
 
+static int enable_movement;
 static int sm_frame;
+static int sm_invert;
+static int sm_speed;
+static int sm_pos;
+static float sm_fpos;
 
 GFraMe_ret ps_init() {
     int i;
@@ -94,6 +100,9 @@ GFraMe_ret ps_init() {
     
     sm_cur = 0;
     sm_frame = sm_rise.frames[0];
+    sm_invert = 0;
+    sm_pos = 0;
+    sm_fpos = 0;
     
     txt_init();
     
@@ -102,6 +111,8 @@ GFraMe_ret ps_init() {
     new_snow = 0;
     new_leaf = 0;
     state = 0;
+    enable_movement = 0;
+    facing_left = 0;
     
     GFraMe_event_init(UPS, DPS);
 __ret:
@@ -155,6 +166,7 @@ static void ps_do_particles();
 static void ps_do_anim();
 static void ps_do_tip();
 static void ps_do_text();
+static void ps_do_sm();
 
 void ps_update() {
   int skip;
@@ -174,14 +186,16 @@ void ps_update() {
       ps_do_particles();
       ps_do_tip();
       ps_do_text();
+      if (enable_movement)
+        ps_do_sm();
     } while (skip-- > 0);
   GFraMe_event_update_end();
 }
 
 void ps_render(GFraMe_spriteset *ss, int tile, int offx, int y, int w) {
-    GFraMe_spriteset_draw(ss, tile, pos + offx, y, 0);
+    GFraMe_spriteset_draw(ss, tile, pos + offx, y, facing_left);
     if (pos + offx + w - SCRW >= 0)
-        GFraMe_spriteset_draw(ss, tile, pos + offx - SCRW, y, 0);
+        GFraMe_spriteset_draw(ss, tile, pos + offx - SCRW, y, facing_left);
 }
 
 void ps_draw() {
@@ -218,8 +232,19 @@ void ps_draw() {
             ps_render(gl_sset64x16, 15, -40, 40, 46);
             ps_render(gl_sset64x16, 15, 120, 40, 46);
         break;
-        case snowman:
+        case snowman: {
+            int tmp;
+            
+            tmp = pos;
+            pos = sm_pos;
+            
+            if (sm_invert)
+                facing_left = 1;
             ps_render(gl_sset16x16, sm_frame, 20/*pos*/, 32/*y*/, 16/*w*/);
+            facing_left = 0;
+            
+            pos = tmp;
+        }
         break;
         case particles:
             p_draw(pos);
@@ -268,6 +293,14 @@ static void ps_move_world() {
     else if (fpos < 0)
         fpos += SCRW;
     pos = (int)fpos;
+    
+    if (sm_speed != 0)
+        sm_fpos += sm_speed * GFraMe_event_elapsed / 1000.0f;
+    if (sm_fpos > SCRW)
+        sm_fpos -= SCRW;
+    else if (sm_fpos < 0)
+        sm_fpos += SCRW;
+    sm_pos = (int)sm_fpos;
 }
 
 static void ps_do_particles() {
@@ -307,8 +340,26 @@ static void ps_do_anim() {
         
         if (rv == GFraMe_ret_anim_new_frame && sm_cur->index < sm_cur->num_frames)
             sm_frame = sm_cur->frames[sm_cur->index];
-        else if (rv == GFraMe_ret_anim_finished)
-            sm_cur = 0;
+        else if (rv == GFraMe_ret_anim_finished) {
+            if (state == 4) {
+                enable_movement = 1;
+                state++;
+            }
+            if (sm_speed != 0 && sm_cur == &sm_jump) {
+                sm_cur = &sm_fall;
+                sm_frame = sm_cur->frames[0];
+            }
+            else {
+                sm_cur->num_finished = 0;
+                sm_cur->index = 0;
+	            sm_cur->acc = sm_cur->frame_duration;
+                sm_cur = 0;
+            }
+        }
+    }
+    else if (sm_speed != 0) {
+        sm_cur = &sm_jump;
+        sm_frame = sm_cur->frames[0];
     }
 }
 
@@ -320,20 +371,90 @@ static void ps_do_text() {
     
     if (txt_is_complete()) {
       switch (state) {
-        case 0: txt_set_text("IN THE END..."); state++; break;
-        case 1: txt_set_text("I COULDN'T MEET HIM AGAIN..."); state++; break;
-        case 2: txt_set_text("IT'S BEEN SO LONG..."); state++; break;
-        case 3: txt_set_text("I WENT TO MANY      PLACES"); state++; break;
-        case 4: txt_set_text("DID MY BEST TO KEEP FROM MELTING"); state++; break;
-        case 5: txt_set_text("THOSE MANY WINTER   WERE HARSH, AT TIMES"); state++; break;
-        case 6: txt_set_text("ANY MISSTEP AND I   WOULD BE NO MORE"); state++; break;
-        case 7: txt_set_text("BUT EVEN HERE,      WHENCE I CAME FROM"); state++; break;
-        case 8: txt_set_text("I FOUND NOTHING..."); state++; break;
-        case 9: txt_set_text("AND COULDN'T HANDLE ANYMORE"); state++; break;
-        case 10:txt_set_text("        THE                  END        ");break;
+        case 0:
+            txt_set_text("IN THE END...");
+            state++;
+            break;
+        case 1:
+            txt_set_text("I COULDN'T MEET HIM AGAIN...");
+            state++;
+            break;
+        case 2:
+            txt_set_text("IT'S BEEN SO LONG...");
+            state++;
+            break;
+        case 3:
+            txt_set_text("I WENT TO MANY      PLACES");
+            sm_cur = &sm_rise;
+            state++;
+            break;
+        case 5:
+            txt_set_text("DID MY BEST TO KEEP FROM MELTING");
+            state++;
+            break;
+        case 6:
+            txt_set_text("THOSE MANY WINTER   WERE HARSH, AT TIMES");
+            state++;
+            break;
+        case 7:
+            txt_set_text("ANY MISSTEP AND I   WOULD BE NO MORE");
+            state++;
+            break;
+        case 8:
+            txt_set_text("BUT EVEN HERE,      WHENCE I CAME FROM");
+            state++;
+            break;
+        case 9:
+            txt_set_text("I FOUND NOTHING...");
+            state++;
+            break;
+        case 10:
+            txt_set_text("AND COULDN'T HANDLE ANYMORE");
+            state++;
+            break;
+        case 11:
+            txt_set_text("        THE                  END        ");
+            break;
         default: {}
       }
     }
     
+}
+
+static void ps_do_sm() {
+    sm_speed = 0;
+    if (GFraMe_keys.a
+        || GFraMe_keys.left
+        || GFraMe_keys.h
+        || GFraMe_controller_max > 0
+        && (
+            GFraMe_controllers[0].left
+         || GFraMe_controllers[0].lx < -0.3
+           )
+       )
+    {
+        sm_invert = 1;
+        speed = -SCRW/10;
+        sm_speed = -SCRW/10;
+    }
+    else if (GFraMe_keys.d
+        || GFraMe_keys.right
+        || GFraMe_keys.l
+        || GFraMe_controller_max > 0
+        && (
+            GFraMe_controllers[0].right
+         || GFraMe_controllers[0].lx > 0.3
+           )
+       )
+    {
+        sm_invert = 0;
+        speed = SCRW/10;
+        sm_speed = SCRW/8;
+    }
+    else {
+        speed = SCRW/10;
+        sm_cur = 0;
+        sm_frame = 32;
+    }
 }
 
