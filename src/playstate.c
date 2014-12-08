@@ -612,8 +612,9 @@ static void ps_do_sm() {
         return;
     }
     
-    dif = sm_pos - pos;
-    if (dif < -30 || dif > 28) {
+    // FIXED!!! BOOOYA!!
+    dif = (SCRW + sm_pos - pos) % SCRW;
+    if (dif < 134 && dif > 28) {
         state = -2;
         sm_cur = &sm_down;
         return;
