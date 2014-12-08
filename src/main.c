@@ -34,6 +34,8 @@ int main(int argc, char *argv[]) {
         );
     ASSERT(rv == GFraMe_ret_ok);
     
+//    GFraMe_controller_init(1);
+    
     rv = GFraMe_audio_player_init();
     ASSERT(rv == GFraMe_ret_ok);
     
@@ -54,6 +56,7 @@ __ret:
     
     gl_clean();
     GFraMe_audio_player_clear();
+//    GFraMe_controller_close();
     GFraMe_quit();
     return rv;
 }

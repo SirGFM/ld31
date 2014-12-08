@@ -70,6 +70,7 @@ static float sm_fpos;
 
 static float kid_pos;
 static int kid_time;
+static int kid_frame;
 
 GFraMe_ret ps_init() {
     int i;
@@ -121,6 +122,7 @@ GFraMe_ret ps_init() {
     
     kid_pos = 0;
     kid_time = 250;
+    kid_frame = 41;
     
     txt_init();
     utxt_init();
@@ -156,9 +158,17 @@ void ps_event() {
 //    GFraMe_event_on_finger_down();
 //    GFraMe_event_on_finger_up();
     GFraMe_event_on_controller();
+      if (wait_for_input)
+        enable_movement = 1;
+      
       if (GFraMe_controller_max > 0) {
         if (GFraMe_controllers[0].home)
           gl_running = 0;
+        else if (state == -1 && utxt_is_complete()
+          && (GFraMe_controllers[0].left || GFraMe_controllers[0].lx < -0.3)) {
+          state = 0;
+          utxt_set_text("                                        ");
+        }
         else if (GFraMe_controllers[0].select) {
           if (is_song_playing) {
             GFraMe_audio_player_pause();
@@ -270,6 +280,19 @@ void ps_update() {
             state++;
          }
       }
+      // Animate kids movement)
+      if (state == 10 || state == 13) {
+        if (kid_time > 0) {
+            kid_time -= GFraMe_event_elapsed;
+        }
+        else {
+            if (kid_frame == 41)
+                kid_frame = 42;
+            else
+                kid_frame = 41;
+            kid_time += 125;
+        }
+      }
     } while (skip-- > 0);
   GFraMe_event_update_end();
 }
@@ -331,7 +354,7 @@ void ps_draw() {
         break;
         case kid:
             if (state == 10) {
-                ps_render(gl_sset16x16, 41, kid_pos/*pos*/, 32/*y*/, 2*SCRW+16/*w*/);
+                ps_render(gl_sset16x16, kid_frame, kid_pos/*pos*/, 32/*y*/, 2*SCRW+16/*w*/);
             }
             else if (state == 11) {
                 ps_render(gl_sset16x16, 39, kid_pos/*pos*/, 32/*y*/, 2*SCRW+16/*w*/);
@@ -341,7 +364,7 @@ void ps_draw() {
             }
             else if (state == 13) {
                 facing_left = 1;
-                ps_render(gl_sset16x16, 41, kid_pos/*pos*/, 32/*y*/, 2*SCRW+16/*w*/);
+                ps_render(gl_sset16x16, kid_frame, kid_pos/*pos*/, 32/*y*/, 2*SCRW+16/*w*/);
                 facing_left = 0;
             }
         break;
@@ -604,11 +627,11 @@ static void ps_do_sm() {
     if (GFraMe_keys.a
         || GFraMe_keys.left
         || GFraMe_keys.h
-        || GFraMe_controller_max > 0
+        || (GFraMe_controller_max > 0
         && (
             GFraMe_controllers[0].left
          || GFraMe_controllers[0].lx < -0.3
-           )
+           ))
        )
     {
         sm_invert = 1;
@@ -618,11 +641,11 @@ static void ps_do_sm() {
     else if (GFraMe_keys.d
         || GFraMe_keys.right
         || GFraMe_keys.l
-        || GFraMe_controller_max > 0
+        || (GFraMe_controller_max > 0
         && (
             GFraMe_controllers[0].right
          || GFraMe_controllers[0].lx > 0.3
-           )
+           ))
        )
     {
         sm_invert = 0;
