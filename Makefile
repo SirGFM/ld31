@@ -10,10 +10,6 @@ OBJS= \
      src/text.o \
      src/upper_text.o
 
-ASSETS= \
-       assets/atlas.dat \
-       assets/song
-
 CFLAGS=-I./libs/GFraMe/include/ -m64
 ifneq ($(RELEASE), yes)
   CFLAGS += -g -O0 -DDEBUG
@@ -24,17 +20,11 @@ LIB=./libs/GFraMe/bin/Linux/libGFraMe.a
 all: $(TARGET)
 	date
 
-$(TARGET): $(LIB) $(OBJS) $(ASSETS)
+$(TARGET): $(LIB) $(OBJS)
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS) $(LDFLAGS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -o $@ -c $<
-
-assets/atlas.dat: assets/atlas.bmp
-	rm -f $@
-
-assets/song: assets/song.wav
-	rm -f $@
 
 $(LIB):
 	make static --directory=./libs/GFraMe/
