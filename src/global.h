@@ -10,8 +10,13 @@
 
 #define SCRW    160
 #define SCRH    80
-#define WNDW    480
-#define WNDH    240
+#if !defined(GFRAME_MOBILE)
+#  define WNDW    480
+#  define WNDH    240
+#else
+#  define WNDW    0
+#  define WNDH    0
+#endif
 #define TITLE   "ColdRemembrance"
 #define TEX     "atlas"
 #define TEXW    256

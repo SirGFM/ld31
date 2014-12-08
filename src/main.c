@@ -3,7 +3,9 @@
  */
 #include <GFraMe/GFraMe.h>
 #include <GFraMe/GFraMe_audio_player.h>
-#include <GFraMe/GFraMe_controller.h>
+#if !defined(GFRAME_MOBILE)
+#  include <GFraMe/GFraMe_controller.h>
+#endif
 #include <GFraMe/GFraMe_screen.h>
 
 #include "global.h"
@@ -34,7 +36,11 @@ int main(int argc, char *argv[]) {
         );
     ASSERT(rv == GFraMe_ret_ok);
     
+#if !defined(GFRAME_MOBILE)
     GFraMe_controller_init(1);
+#else
+    GFraMe_screen_set_keep_ratio(0, 1);
+#endif
     
     rv = GFraMe_audio_player_init();
     ASSERT(rv == GFraMe_ret_ok);
@@ -56,7 +62,9 @@ __ret:
     
     gl_clean();
     GFraMe_audio_player_clear();
+#if !defined(GFRAME_MOBILE)
     GFraMe_controller_close();
+#endif
     GFraMe_quit();
     return rv;
 }

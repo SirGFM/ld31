@@ -7,8 +7,12 @@
 #include <GFraMe/GFraMe_error.h>
 #include <GFraMe/GFraMe_event.h>
 #include <GFraMe/GFraMe_log.h>
-#include <GFraMe/GFraMe_keys.h>
-#include <GFraMe/GFraMe_sprite.h>
+#if !defined(GFRAME_MOBILE)
+#  include <GFraMe/GFraMe_keys.h>
+#  include <GFraMe/GFraMe_sprite.h>
+#else
+#  include <GFraMe/GFraMe_pointer.h>
+#endif
 #include <GFraMe/GFraMe_spriteset.h>
 #include <GFraMe/GFraMe_util.h>
 
@@ -38,6 +42,11 @@ enum {
     clouds,
     SPR_MAX
 };
+
+#if defined(GFRAME_MOBILE)
+static int go_right;
+static int go_left;
+#endif
 
 static float speed;
 static int pos;
@@ -143,6 +152,10 @@ GFraMe_ret ps_init() {
     do_change_state = 1;
     wait_for_input = 0;
     snow_harsher = 0;
+#if defined(GFRAME_MOBILE)
+    go_right = 0;
+    go_left = 0;
+#endif
     
     GFraMe_event_init(UPS, DPS);
 __ret:
@@ -155,8 +168,31 @@ void ps_event() {
 //    GFraMe_event_on_mouse_up();
 //    GFraMe_event_on_mouse_down();
 //    GFraMe_event_on_mouse_moved();
-//    GFraMe_event_on_finger_down();
-//    GFraMe_event_on_finger_up();
+#if defined(GFRAME_MOBILE)
+    GFraMe_event_on_bg();
+      GFraMe_audio_player_pause();
+    GFraMe_event_on_fg();
+      GFraMe_audio_player_play();
+    GFraMe_event_on_finger_down();
+      if (wait_for_input)
+        enable_movement = 1;
+      else if (state == -1 && utxt_is_complete()) {
+        state = 0;
+        utxt_set_text("                                        ");
+      }
+      
+      if (GFraMe_pointer_x < SCRW/2) {
+        go_right = 0;
+        go_left = 1;
+      }
+      else {
+        go_right = 1;
+        go_left = 0;
+      }
+    GFraMe_event_on_finger_up();
+      go_right = 0;
+      go_left = 0;
+#else
     GFraMe_event_on_controller();
       if (wait_for_input)
         enable_movement = 1;
@@ -202,6 +238,7 @@ void ps_event() {
         }
       }
     GFraMe_event_on_key_up();
+#endif
     GFraMe_event_on_quit();
       gl_running = 0;
   GFraMe_event_end();
@@ -218,12 +255,14 @@ void ps_update() {
   int skip;
   
   skip = 0;
+#if !defined(GFRAME_MOBILE)
   if (GFraMe_keys.one)
     skip += 1;
   if (GFraMe_keys.two)
     skip += 2;
   if (GFraMe_keys.three)
     skip += 3;
+#endif
 
   GFraMe_event_update_begin();
     do {
@@ -625,6 +664,7 @@ static void ps_do_sm() {
         return;
     }
     
+#if !defined(GFRAME_MOBILE)
     if (GFraMe_keys.a
         || GFraMe_keys.left
         || GFraMe_keys.h
@@ -658,5 +698,22 @@ static void ps_do_sm() {
         sm_cur = 0;
         sm_frame = 32;
     }
+#else
+    if (go_left) {
+        sm_invert = 1;
+        speed = -SCRW/10;
+        sm_speed = -SCRW/10;
+    }
+    else if (go_right) {
+        sm_invert = 0;
+        speed = SCRW/10;
+        sm_speed = SCRW/8;
+    }
+    else {
+        speed = SCRW/10;
+        sm_cur = 0;
+        sm_frame = 32;
+    }
+#endif
 }
 
